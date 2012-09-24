@@ -1,11 +1,12 @@
+PATH := ./node_modules/.bin:$(PATH)
 
-build: components
-	@component build --dev
+test: compile
+	@NODE_ENV=test mocha-fibers --recursive test --compilers coffee:coffee-script
 
-components:
-	@component install --dev
+compile:
+	@coffee --compile --output lib/ src
 
-clean:
-	rm -fr build components template.js
+compile-test:
+	@coffee --compile --output test-compiled/ test
 
-.PHONY: clean
+.PHONY: test
