@@ -3,8 +3,8 @@ http = require 'http'
 
 extend = (dest, sources...) ->
   for s in sources
-    for key in s
-      dest[key] = s[key]
+    for key, val of s
+      dest[key] = val
   dest
 
 exports.request = request = (options = {}) ->
@@ -26,13 +26,16 @@ exports.request = request = (options = {}) ->
     
   req.on 'response', (res) ->
     body = ''
-
+    
     res.on 'close', (err) ->      
+      f.throw err unless f.isResolved()
+
+    res.on 'error', (err) ->
       f.throw err unless f.isResolved()
       
     res.on 'data', (data) -> body += data
     res.on 'end', ->
-      f.return extend({}, response, {body: body}) unless f.isResolved()
+      f.return extend({}, res, {body: body}) unless f.isResolved()
 
   req.write(requestBody) if requestBody
   req.end()

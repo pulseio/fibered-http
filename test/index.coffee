@@ -13,17 +13,18 @@ describe 'fibered-http', ->
     @resClose = false
     @body = ''
     @timeout = null
+    @statusCode = 200
     
-    @stub = sinon.stub http, 'request', (options) ->
+    @stub = sinon.stub http, 'request', (options) =>
       req = new events.EventEmitter()
 
-      req.setTimeout = (timeout, cb) ->
-        @timeout = setTimeout ->
+      req.setTimeout = (timeout, cb) =>
+        @timeout = setTimeout =>
           cb()
         , timeout
 
-      req.end = ->      
-        process.nextTick ->
+      req.end = =>      
+        process.nextTick =>
           
           if @reqClose
             req.emit 'close', new Error("Socket closed")
@@ -35,9 +36,9 @@ describe 'fibered-http', ->
 
           unless @timeout        
             res = new events.EventEmitter()
-            res.emit 'response', res
-
-            process.nextTick ->
+            res.statusCode = 200
+            req.emit 'response', res
+            process.nextTick =>
               if @resClose
                 res.emit 'close', new Error("Socket closed")
                 return
@@ -57,15 +58,25 @@ describe 'fibered-http', ->
   describe 'request', ->
 
     it 'should throw on timeout', ->
-      @timeout = 10      
-      fiberedHttp.request({timeout: 10}).should.throw
+      @timeout = 10
+      (-> fiberedHttp.request({timeout: 10})).should.throw /timeout/i
       
     it 'should throw on request error', ->
-      @reqError = new Error(foo)
-      fiberedHttp.request({}).should.throw
+      @reqError = new Error('foo')
+      (-> fiberedHttp.request({})).should.throw /foo/
       
-    it 'should throw on request close'
-    it 'should return request'
+    it 'should throw on response close', ->
+      @resClose = true
+      (-> fiberedHttp.request({})).should.throw /socket/i
+
+    it 'should throw on response error', ->
+      @resError = new Error("foo")
+      (-> fiberedHttp.request({})).should.throw /foo/
+      
+    it 'should return request', ->
+      @statusCode = 200
+      fiberedHttp.request({}).statusCode.should.eql @statusCode
+      
     it 'should add body to request', ->
       @body = 'foo bar'
-      fiberedHttp.request({}).should.eql @body
+      fiberedHttp.request({}).body.should.eql @body
