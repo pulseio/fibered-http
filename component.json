@@ -1,0 +1,9 @@
+{
+  "name": "component",
+  "repo": "astoundlabs/component",
+  "description": "Fibered interface for node.js http library",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {},
+  "development": {}
+}
