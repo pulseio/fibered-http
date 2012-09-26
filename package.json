@@ -1,6 +1,6 @@
 {
   "name": "fibered-http",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./lib/index",
   "dependencies": {
 	"fibers": "0.6.x"
