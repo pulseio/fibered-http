@@ -1,5 +1,8 @@
 Future = require 'fibers/future'
 http = require 'http'
+https = require 'https'
+url = require 'url'
+querystring = require 'querystring'
 
 extend = (dest, sources...) ->
   for s in sources
@@ -10,10 +13,29 @@ extend = (dest, sources...) ->
 exports.request = request = (options = {}) ->
   f = new Future
 
+  # Clone options to prevent mutating parameter
+  options = extend({}, options)
+
+  # Handle extra options  
   delete options.timeout if timeout = options.timeout
   delete options.body if requestBody = options.body
+
+  if options.url
+    parsed = url.parse(options.url)
+    options = extend({hostname: parsed.hostname, port: parsed.port || 80, protocol: parsed.protocol, path: parsed.path}, options)
+    delete options.url
   
-  req = http.get(options)
+  if options.query
+    [path, query] = (options.path || '').split('?')
+    query = querystring.parse(query)
+    qs = querystring.stringify(extend(query, options.query))
+    if qs.length > 0
+      options.path = (path || '') + '?' + qs
+    delete options.query
+            
+  protocol = if options.protocol?.match(/^https/) then https else http    
+  
+  req = protocol.request(options)
 
   if timeout
     req.setTimeout timeout, ->

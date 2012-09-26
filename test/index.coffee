@@ -3,6 +3,7 @@ should = require 'should'
 events = require 'events'
 fiberedHttp = require '../lib'
 http = require 'http'
+https = require 'https'
 
 describe 'fibered-http', ->
 
@@ -14,8 +15,10 @@ describe 'fibered-http', ->
     @body = ''
     @timeout = null
     @statusCode = 200
+    @options = null
     
     @stub = sinon.stub http, 'request', (options) =>
+      @options = options
       req = new events.EventEmitter()
 
       req.setTimeout = (timeout, cb) =>
@@ -80,3 +83,30 @@ describe 'fibered-http', ->
     it 'should add body to request', ->
       @body = 'foo bar'
       fiberedHttp.request({}).body.should.eql @body
+
+    it 'should allow full urls', ->
+      fiberedHttp.request({url: 'http://www.foo.com:3000/path?query=foo'})
+      @options.hostname.should.eql 'www.foo.com'
+      @options.path.should.eql '/path?query=foo'
+      @options.port.should.eql '3000'
+      
+    it 'should use proper protocol', ->
+      stub = sinon.stub(https, 'request', http.request)
+      fiberedHttp.request({url: 'https://www.foo.com'})
+      stub.called.should.be.true
+      stub.restore()
+
+    describe 'with query', ->
+
+      it 'should append query to path', ->
+        fiberedHttp.request({path: '/foo', query: {foo: 'bar'}})
+        @options.path.should.eql '/foo?foo=bar'
+          
+      it 'should merge query with query already in path', ->
+        fiberedHttp.request({path: '/foo?foo=bar', query: {hello: 'world'}})
+        @options.path.should.eql '/foo?foo=bar&hello=world'
+        
+      it 'should handle missing path', ->
+        fiberedHttp.request({query: {foo: 'bar'}})
+        @options.path.should.eql '?foo=bar'
+      
