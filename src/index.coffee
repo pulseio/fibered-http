@@ -57,7 +57,13 @@ exports.request = request = (options = {}) ->
       
     res.on 'data', (data) -> body += data
     res.on 'end', ->
-      f.return extend({}, res, {body: body}) unless f.isResolved()
+      unless f.isResolved()
+        f.return
+          body: body
+          headers: res.headers
+          trailers: res.trailers
+          statusCode: res.statusCode
+          httpVersion: res.httpVresion
 
   req.write(requestBody) if requestBody
   req.end()
