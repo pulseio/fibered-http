@@ -82,7 +82,9 @@ class Request
   redirect: (location, future) ->
 
     if Fiber.current
-      future.return(new Request(extend(@options, {maxRedirects: @options.maxRedirects - 1})).send())
+      redirectOptions = extend(@options, {maxRedirects: @options.maxRedirects - 1, url: location})
+      delete redirectOptions[opt] for opt in ['host', 'hostname', 'path', 'port', 'protocol']
+      future.return(new Request(redirectOptions).send())
     else
       Fiber(=> @redirect(location, future)).run()         
     

@@ -124,7 +124,12 @@ describe 'fibered-http', ->
       it 'should follow redirects', ->
         fiberedHttp.request({url: 'http://bar'})
         @stub.callCount.should.eql 6
-        
+
+      it 'should insert new url into redirect', ->
+        spy = sinon.spy(fiberedHttp, 'request')
+        fiberedHttp.request({url: 'http://bar'})
+        spy.calledWith({url: 'http://foo'})
+            
       it 'should not follow more than maxRedirects', ->
         fiberedHttp.request({url: 'http://bar', maxRedirects: 1})
         @stub.callCount.should.eql 2
