@@ -58,7 +58,7 @@ class Request
 
   response: (res, future) ->
     if Math.floor(res.statusCode/100) == 3 and @options.followRedirects and @options.maxRedirects > 0
-      @redirect(res.headers['Location'], future)
+      @redirect(res.headers.Location || res.headers.location, future)
 
     else
       body = ''
