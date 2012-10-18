@@ -16,6 +16,7 @@ describe 'fibered-http', ->
     @timeout = null
     @statusCode = 200
     @options = null
+    @redirects = null
     
     @stub = sinon.stub http, 'request', (options) =>
       @options = options
@@ -39,7 +40,13 @@ describe 'fibered-http', ->
 
           unless @timeout        
             res = new events.EventEmitter()
-            res.statusCode = 200
+            if @redirects && @redirects > 0
+              res.statusCode = 302
+              res.headers = {'Location': 'http://foo'}
+              @redirects--
+            else
+              res.statusCode = 200
+            
             req.emit 'response', res
             process.nextTick =>
               if @resClose
@@ -109,4 +116,22 @@ describe 'fibered-http', ->
       it 'should handle missing path', ->
         fiberedHttp.request({query: {foo: 'bar'}})
         @options.path.should.eql '?foo=bar'
+
+    describe 'with redirects', ->
+      beforeEach ->
+        @redirects = 5
+
+      it 'should follow redirects', ->
+        fiberedHttp.request({url: 'http://bar'})
+        @stub.callCount.should.eql 6
+        
+      it 'should not follow more than maxRedirects', ->
+        fiberedHttp.request({url: 'http://bar', maxRedirects: 1})
+        @stub.callCount.should.eql 2
+
+      describe 'followRedirects = false', ->
+        it 'should not follow redirects', ->
+          fiberedHttp.request({url: 'http://bar', followRedirects: false})
+          @stub.callCount.should.eql 1
+        
       
