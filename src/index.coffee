@@ -11,6 +11,13 @@ extend = (dest, sources...) ->
   dest
 
 
+# Http(s) request.  Takes same options as standard node.js http and https requests, with the following additions:
+#
+# protocol - https or http.  Chooses appropriate underlying node.js library
+# timeout - adds a timeout to request.  If timeout is triggerd, an error with Http Timeout as the message will be thrown.
+# url - complete url including protocol.
+# query - querystring.  Will be merged with querystring in url and/or path if they exist.
+
 class Request
   constructor: (options) ->
 
@@ -36,8 +43,9 @@ class Request
   send: ->
     
     future = new Future
-    
-    protocol = if @options.protocol?.match(/^https/) then https else http    
+
+    protocol = if @options.protocol?.match(/^https/) then https else http
+    delete @options.protocol
     
     req = protocol.request(@options)
 
