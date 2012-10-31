@@ -7,9 +7,11 @@ improve the interface.
 Use
 ===
 
+```javascript
 var http = require('fibered-http');
 var result = http.request({url: 'http://foo.bar'});
 console.log("I have html baby! " + result.body);
+```
 
 API
 ===
